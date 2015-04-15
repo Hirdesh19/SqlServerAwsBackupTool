@@ -46,7 +46,7 @@ namespace SqlServerAwsBackupTool
             // Use the date to create a unique name for the backup
             var dateString = DateTime.UtcNow.ToString("yyyy_MM_dd_HH_mm_ss");
             var bkpName = serverName + "_" + database + "_" + dateString + ".bak";
-            var bkpPath = tmpFolder + bkpName;
+            var bkpPath = Path.Combine(tmpFolder, bkpName);
 
             // Perform the backup
             if (!Directory.Exists(tmpFolder))

@@ -69,7 +69,7 @@ namespace SqlServerAwsBackupTool.Tests
                 conn.Execute("drop database " + dbName);
 
                 // Restore the backup from S3
-                backupFile = tmpFolder + backupResult.BackupName;
+                backupFile = Path.Combine(tmpFolder, backupResult.BackupName);
                 var awsProfile = "sql_server_backup";
 
                 Amazon.Util.ProfileManager.RegisterProfile(awsProfile, config["aws"]["access_key"], config["aws"]["secret_key"]);
