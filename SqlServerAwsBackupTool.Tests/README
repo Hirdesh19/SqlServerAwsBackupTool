@@ -1,0 +1,6 @@
+﻿Testing
+
+You will need to do these things:
+1. Create a test folder to dump files into
+2. Get your AWS credentials
+3. Copy example.ini.default and fill in the details

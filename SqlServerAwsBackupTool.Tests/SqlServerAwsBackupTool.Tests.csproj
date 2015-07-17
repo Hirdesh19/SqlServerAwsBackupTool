@@ -81,6 +81,7 @@
   <ItemGroup>
     <Compile Include="BasicScenarioTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <None Include="README" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

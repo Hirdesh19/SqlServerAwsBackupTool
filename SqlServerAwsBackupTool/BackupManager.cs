@@ -18,18 +18,37 @@ namespace SqlServerAwsBackupTool
     {
         public BackupResult Backup(string[] args)
         {
-            if (args.Length < 1)
+            if (args.Length < 2)
             {
-                Console.Error.WriteLine("You must specify a configuration file.");
+                Console.Error.WriteLine("You must specify a backup type and a configuration file, in that order.");
                 return new BackupResult(-1);
             }
 
-            var configFileName = args[0];
+            BackupActionType bkpType;
+            string bkpTypeLabel;
+
+            if (args[0] == "full")
+            {
+                bkpType = BackupActionType.Database;
+                bkpTypeLabel = "full";
+            }
+            else if (args[0] == "incremental")
+            {
+                bkpType = BackupActionType.Log;
+                bkpTypeLabel = "incr";
+            }
+            else
+            {
+                Console.Error.WriteLine("You must specify either full or incremental.");
+                return new BackupResult(-2);
+            }
+
+            var configFileName = args[1];
 
             if (!File.Exists(configFileName))
             {
                 Console.Error.WriteLine("You must specify a configuration file that exists.");
-                return new BackupResult(-2);
+                return new BackupResult(-3);
             }
 
             var parser = new FileIniDataParser();
@@ -45,7 +64,7 @@ namespace SqlServerAwsBackupTool
 
             // Use the date to create a unique name for the backup
             var dateString = DateTime.UtcNow.ToString("yyyy_MM_dd_HH_mm_ss");
-            var bkpName = serverName + "_" + database + "_" + dateString + ".bak";
+            var bkpName = serverName + "_" + database + "_" + bkpTypeLabel + "_" + dateString + ".bak";
             var bkpPath = Path.Combine(tmpFolder, bkpName);
 
             // Perform the backup
@@ -56,9 +75,17 @@ namespace SqlServerAwsBackupTool
 
             var serverConn = new ServerConnection(serverName);
             var server = new Server(serverConn);
+            var db = server.Databases[database];
+
+            if (bkpType == BackupActionType.Log && db.RecoveryModel != RecoveryModel.Full)
+            {
+                Console.Error.WriteLine(database + " must be in full recovery mode to backup logs.");
+                return new BackupResult(-4);
+            }
+
             var backup = new Backup();
 
-            backup.Action = BackupActionType.Database;
+            backup.Action = bkpType;
             backup.Database = database;
             backup.Devices.AddDevice(bkpPath, DeviceType.File);
 
@@ -88,7 +115,7 @@ namespace SqlServerAwsBackupTool
             File.Delete(bkpPath);
 
             // Cleanup the S3 bucket based on the retention policy
-            var twoWeeksAgo = DateTime.Now.AddMinutes(retentionPolicy);
+            var retentionPolicyDaysAgo = DateTime.Now.AddDays(retentionPolicy);
             var listReq = new ListObjectsRequest()
             {
                 BucketName = config["aws"]["bucket"]
@@ -98,7 +125,7 @@ namespace SqlServerAwsBackupTool
 
             foreach (var obj in objects.S3Objects)
             {
-                if (obj.LastModified < twoWeeksAgo)
+                if (obj.LastModified < retentionPolicyDaysAgo)
                 {
                     var delReq = new DeleteObjectRequest() { BucketName = config["aws"]["bucket"], Key = obj.Key };
 

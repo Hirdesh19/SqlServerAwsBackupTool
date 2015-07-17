@@ -1,0 +1,13 @@
+﻿[sqlserver]
+server = 
+database = 
+temp_dir = C:\temp\
+
+[aws]
+access_key = 
+secret_key = 
+bucket = 
+profile = 
+
+[general]
+retention_policy = 28
