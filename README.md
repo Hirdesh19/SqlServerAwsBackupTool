@@ -23,13 +23,21 @@ To use, you need to create an INI file with these variables filled in:
     access_key =  
     secret_key =  
     bucket =  
+    profile = 
 
     [general]  
     retention_policy=14  
 
-Then, you pass the path to the file as the first argument to the program:
+The variable retention_policy is in days. Then, you pass the path to the file as the first argument to the program:
 
     SqlServerAwsBackupTool.exe config.ini
+
+## Deployment
+
+- Set build to release mode and build
+- Add any new/updated configuration variables
+- Add/change any scheduled tasks
+- Verify that your backups are occuring; test them by restoring them (on a test server)
 
 ## Testing your backups
 
